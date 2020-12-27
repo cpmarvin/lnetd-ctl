@@ -8,10 +8,13 @@ https://github.com/Netronome/bpf-samples/blob/master/l4lb
 https://github.com/fzakaria/ebpf-mpls-encap-decap
 
 
+
 LnetD-Host:
 ![LnetD-HOST](/images/lnetd-host-ctl.png)
 
 
+1000000 is the first available static label on JNP but you can use any label #define MPLS_STATIC_LABEL <X>. Future versions will use a bpf map to associate dst ip with different label allowing a programatic way to forward traffic. The expectation is in later versions a program will talk with the controller and program the BPF maps.
+    
 Verification:
 ```
 R5:
