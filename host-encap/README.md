@@ -17,6 +17,54 @@ LnetD-Host:
     
 To compile the program just make inside the folder. Modify enable/disable and add the interface name. Change to xdp or xdpoffload if the nic supports it, remember this is a PoC , don't ever use this in production.   
  
+Using the lnetd_cmd:
+
+```
+- Disable with lnetd_cmd
+ % sudo ./lnetd_cmd -i lo -r
+stopping
+- Enable with lnetd_cmd 
+ % sudo ./lnetd_cmd -i lo   
+all done , filename lnetd-host-mpls-encap.o active on interface lo
+```
+
+- Check program id and get map id 
+
+```
+ % sudo bpftool map 
+259: hash  name servers  flags 0x0
+	key 4B  value 24B  max_entries 512  memlock 53248B
+```
+
+- Program map
+```
+ % sudo bpftool batch file tmp_label_program.txt 
+processed 1 commands
+
+ % sudo bpftool map dump id 259                 
+key:
+08 08 08 08  /* Destination */
+value:
+13 00 00 00 00 00 00 00  92 07 00 00 00 00 00 00 /* counters */
+00 00 2a 28 00 00 00 00 /* Lbl value == 2a28 == 10792 */
+Found 1 element
+```
+
+Verification for lo with maps:
+
+ - if ip dst is 8.8.8.8 put label 10782 else put default label
+
+```
+ % sudo tcpdump -i lo mpls -n 
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on lo, link-type EN10MB (Ethernet), capture size 262144 bytes
+
+15:37:32.971510 MPLS (label 1000000, exp 0, [S], ttl 64) IP 127.0.0.1.46586 > 127.0.0.53.53: 22861+ A? ssl.gstatic.com. (33)
+
+15:37:33.414962 MPLS (label 10792, exp 0, [S], ttl 64) IP 127.0.0.1 > 8.8.8.8: ICMP echo request, id 55, seq 24, length 64
+```
+
+
     
 Verification:
 ```
