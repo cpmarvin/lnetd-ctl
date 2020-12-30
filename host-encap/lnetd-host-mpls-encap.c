@@ -67,7 +67,7 @@ struct dest_info
 
 	__u64 pkts;
         __u64 bytes;
-        __u64 lbl;
+        __u32 lbl;
 
 
 };
