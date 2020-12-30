@@ -59,25 +59,35 @@ struct pkt_meta
 	};
 };
 
+typedef unsigned char MPLS_LABEL;
+
 struct dest_info
 {
-	__u32 saddr;
-	__u32 daddr;
-	__u64 bytes;
+//        __u32 lbl;
+
 	__u64 pkts;
-	__u8 dmac[6];
+        __u64 bytes;
+        __u64 lbl;
+
+
 };
 
 /*
 struct bpf_map_def SEC("maps") servers = {
-        .type = BPF_MAP_TYPE_HASH,
-        .key_size = sizeof(__u32),
-        .value_size = sizeof(struct dest_info),
-        .max_entries = MAX_SERVERS,
+	.type        = BPF_MAP_TYPE_PERCPU_ARRAY,
+	.key_size    = sizeof(__u32),
+	.value_size  = sizeof(__u64),
+	.max_entries = 1,
 };
 */
 
-/*
+struct bpf_map_def SEC("maps") servers = {
+        .type = BPF_MAP_TYPE_HASH,
+        .key_size = sizeof(__u32), //ipv4_address
+        .value_size = sizeof(struct dest_info),
+        .max_entries = MAX_SERVERS,
+};
+
 static __always_inline struct dest_info *hash_get_dest(struct pkt_meta *pkt)
 {
         __u32 key;
@@ -93,7 +103,6 @@ static __always_inline struct dest_info *hash_get_dest(struct pkt_meta *pkt)
         }
         return tnl;
 }
-*/
 
 static __always_inline bool parse_udp(void *data, __u64 off, void *data_end,
 									  struct pkt_meta *pkt)
@@ -143,9 +152,6 @@ static __always_inline void set_ethhdr(struct ethhdr *new_eth,
 	__builtin_memcpy(h_tmp_src, old_eth->h_source, ETH_ALEN);
 	__builtin_memcpy(h_tmp_dst, old_eth->h_dest, ETH_ALEN);
 
-	//__builtin_memmove(new_eth, old_eth, ETH_ALEN);
-	//memcpy(new_eth->h_source, old_eth->h_source, ETH_ALEN);
-	//memcpy(new_eth->h_dest, old_eth->h_dest, ETH_ALEN);
 	__builtin_memcpy(new_eth->h_dest, h_tmp_src, ETH_ALEN);
 	__builtin_memcpy(new_eth->h_source, h_tmp_dst, ETH_ALEN);
 	new_eth->h_proto = h_proto;
@@ -161,9 +167,6 @@ static __always_inline void set_ethhdr_same(struct ethhdr *new_eth,
 	__builtin_memcpy(h_tmp_src, old_eth->h_source, ETH_ALEN);
 	__builtin_memcpy(h_tmp_dst, old_eth->h_dest, ETH_ALEN);
 
-	//__builtin_memmove(new_eth, old_eth, ETH_ALEN);
-	//memcpy(new_eth->h_source, old_eth->h_source, ETH_ALEN);
-	//memcpy(new_eth->h_dest, old_eth->h_dest, ETH_ALEN);
 	__builtin_memcpy(new_eth->h_dest, h_tmp_dst, ETH_ALEN);
 	__builtin_memcpy(new_eth->h_source, h_tmp_src, ETH_ALEN);
 	new_eth->h_proto = h_proto;
@@ -188,6 +191,7 @@ static __always_inline int process_packet(struct xdp_md *ctx, __u64 off)
 	__u8 protocol;
 	__u8 ttl;
 	u32 csum = 0;
+        u32 mpls_lbl = MPLS_STATIC_LABEL;
 
 	original_header = data;
 	iph = data + off;
@@ -228,17 +232,22 @@ static __always_inline int process_packet(struct xdp_md *ctx, __u64 off)
 	set_ethhdr(new_eth, old_eth, bpf_htons(ETH_P_MPLS_UC));
 
 	//iph = data + sizeof(*new_eth);
-	struct mpls_hdr mpls_new = mpls_encode(MPLS_STATIC_LABEL, ttl, 0, 1);
+        tnl = bpf_map_lookup_elem(&servers, &pkt.dst);
+        if (tnl) {
+          //get the label from the map for this destination
+          mpls_lbl = bpf_ntohl(tnl->lbl);
+          //update stats 
+          pkt_size = (__u16)(data_end - data);
+          __sync_fetch_and_add(&tnl->pkts, 1);
+          __sync_fetch_and_add(&tnl->bytes, pkt_size);
+        }
+        //create mpls header
+        struct mpls_hdr mpls_new = mpls_encode(mpls_lbl, ttl, 0, 1);
+        //allocate the correct space in the packet
 	mpls = data + sizeof(*new_eth);
+        //write the header
 	*mpls = mpls_new;
 
-	/* increment map counters */
-	//pkt_size = (__u16)(data_end - data); /* payload size excl L2 crc */
-	//__sync_fetch_and_add(&tnl->pkts, 1);
-	//__sync_fetch_and_add(&tnl->bytes, pkt_size);
-
-	//              return XDP_TX;
-	//      }
 	return XDP_TX;
 }
 
@@ -262,4 +271,3 @@ int loadbal(struct xdp_md *ctx)
 	else
 		return XDP_PASS;
 }
-

@@ -1,0 +1,2 @@
+#            <mapid>  <ip_dst>     <------pkt/s---> <------bps/s--> <mplslbl> <?????>
+map update id 259 key 8 8 8 8 value 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 42 40 0 0 0 0
