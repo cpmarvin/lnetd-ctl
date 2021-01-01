@@ -1,2 +1,15 @@
-#            <mapid>  <ip_dst>       <-----pkt/s--->  <------bps/s-->  <----mplslbl---->  <padding due to sturuct>
-map update id 264 key 8 8 8 8 value  0 0 0 0 0 0 0 0  0 0 0 0 0 0 0 0  0x0 0x0 0x2a 0x28          0 0 0 0
+
+#add dst 8.0.0.0/8 in default_dst with labelt 14 0xe
+sudo bpftool map update id 405    key  8 0 0 0     8 0 0 0 value  0 0x0 0x0 0xe 
+
+->expected result , packet to 8.8.8.8 has label 14 , packet to other destinations has lbl 1000000
+
+#add dst 8.0.0.0/8 in priority_dst with labelt 15 0xf
+sudo bpftool map update id 404    key  8 0 0 0     8 0 0 0 value  0 0x0 0x0 0xf 
+
+->expected result , packet to 8.8.8.8 has label 14 and not 15 , packet to other destinations has lbl 1000000
+
+#add src 192.168.0.26/32 in priority_client 
+sudo bpftool map update id 403    key  32 0 0 0    192 168 0 26 value  0 0x0 0x0 0x0
+
+->expected result , packet to 8.8.8.8 has label 15 , packet to other destinations has lbl 1000000
