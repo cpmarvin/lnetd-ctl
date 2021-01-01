@@ -8,6 +8,7 @@ https://github.com/Netronome/bpf-samples/blob/master/l4lb
 https://github.com/fzakaria/ebpf-mpls-encap-decap
 
 
+
 See https://github.com/cpmarvin/lnetd-ctl/blob/main/host-encap/ebpf_mpls_encap.pdf for more details.
 
 1000000 is the first available static label on JNP but you can use any label #define MPLS_STATIC_LABEL <X>.
@@ -40,19 +41,19 @@ all done , filename lnetd-host-mpls-encap.o active on interface lo
 
 - Program map
 
-* add dst 8.0.0.0/8 in default_dst with labelt 100 0x64
+* add dst 8.0.0.0/8 in default_dst with label 100 0x64
 ```
  % sudo bpftool map update id 413    key  8 0 0 0     8 0 0 0 value  0 0x0 0x0 0x64 
 
 ```
-* add dst 8.0.0.0/8 in priority_dst with labelt 200 0xC8
+* add dst 8.0.0.0/8 in priority_dst with label 200 0xC8
 ```
  % sudo bpftool map update id 412    key  8 0 0 0     8 0 0 0 value  0 0x0 0x0 0xC8
 
 ```
 * add src 192.168.0.26/32 in priority_client 
 ```
-sudo bpftool map update id 413    key  32 0 0 0    192 168 0 26 value  0 0x0 0x0 0x0
+sudo bpftool map update id 411    key  32 0 0 0    192 168 0 26 value  0 0x0 0x0 0x0
 ```
 
 * expected result 
@@ -64,16 +65,18 @@ packet with src * to 8.8.8.8 has label 100 and not 200 , packet to other destina
 packet with src 192.168.0.26 to 8.8.8.8 has label 200 , packet to other destinations has lbl 1000000
 
 
-Checkig with lo 
+Checkig with filter applied on lo 
 
 ```
  % sudo tcpdump -i lo mpls -n 
 tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
 listening on lo, link-type EN10MB (Ethernet), capture size 262144 bytes
 
-15:37:32.971510 MPLS (label 1000000, exp 0, [S], ttl 64) IP 127.0.0.1.46586 > 127.0.0.53.53: 22861+ A? ssl.gstatic.com. (33)
+17:28:12.294998 MPLS (label 200, exp 0, [S], ttl 64) IP 192.168.0.26 > 8.8.8.8: ICMP echo request, id 82, seq 2192, length 64
+17:28:13.004606 MPLS (label 1000000, exp 0, [S], ttl 64) IP 127.0.0.1.47106 > 127.0.0.53.53: 29684+ A? stadia.google.com. (35)
+17:28:14.001457 MPLS (label 1000000, exp 0, [S], ttl 64) IP 127.0.0.1.57106 > 127.0.0.53.53: 46502+ A? stadia.google.com. (35)
+17:28:14.708666 MPLS (label 100, exp 0, [S], ttl 64) IP 127.0.0.1 > 8.8.8.8: ICMP echo request, id 83, seq 1, length 64
 
-15:37:33.414962 MPLS (label 10792, exp 0, [S], ttl 64) IP 127.0.0.1 > 8.8.8.8: ICMP echo request, id 55, seq 24, length 64
 ```
 
 
