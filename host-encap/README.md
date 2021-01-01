@@ -8,51 +8,62 @@ https://github.com/Netronome/bpf-samples/blob/master/l4lb
 https://github.com/fzakaria/ebpf-mpls-encap-decap
 
 
+See pdf for more details.
 
-LnetD-Host:
-![LnetD-HOST](/images/lnetd-host-ctl.png)
-
-
-1000000 is the first available static label on JNP but you can use any label #define MPLS_STATIC_LABEL <X>. Future versions will use a bpf map to associate dst ip with different label allowing a programatic way to forward traffic. The expectation is in later versions a program will talk with the controller and program the BPF maps.
+1000000 is the first available static label on JNP but you can use any label #define MPLS_STATIC_LABEL <X>.
     
-To compile the program just make inside the folder. Modify enable/disable and add the interface name. Change to xdp or xdpoffload if the nic supports it, remember this is a PoC , don't ever use this in production.   
+To compile the program just make inside the folder.
  
 Using the lnetd_cmd:
 
 ```
 - Disable with lnetd_cmd
- % sudo ./lnetd_cmd -i lo -r
+ % sudo ./lnetd_cmd -i <int_name> -r
 stopping
 - Enable with lnetd_cmd 
- % sudo ./lnetd_cmd -i lo   
+ % sudo ./lnetd_cmd -i <int_name>   
 all done , filename lnetd-host-mpls-encap.o active on interface lo
 ```
 
 - Check program id and get map id 
 
 ```
- % sudo bpftool map 
-259: hash  name servers  flags 0x0
-	key 4B  value 24B  max_entries 512  memlock 53248B
+ % sudo bpftool map       
+411: lpm_trie  name priority_client  flags 0x1
+        key 8B  value 4B  max_entries 50  memlock 4096B
+412: lpm_trie  name priority_dst  flags 0x1
+        key 8B  value 4B  max_entries 50  memlock 4096B
+413: lpm_trie  name default_dst  flags 0x1
+        key 8B  value 4B  max_entries 50  memlock 4096B
+
 ```
 
 - Program map
+
+* add dst 8.0.0.0/8 in default_dst with labelt 14 0xe
 ```
- % sudo bpftool batch file tmp_label_program.txt 
-processed 1 commands
+ % sudo bpftool map update id 413    key  8 0 0 0     8 0 0 0 value  0 0x0 0x0 0xe 
 
- % sudo bpftool map dump id 259                 
-key:
-08 08 08 08  /* Destination */
-value:
-13 00 00 00 00 00 00 00  92 07 00 00 00 00 00 00 /* counters */
-00 00 2a 28 00 00 00 00 /* Lbl value == 2a28 == 10792 */
-Found 1 element
+```
+* add dst 8.0.0.0/8 in priority_dst with labelt 15 0xf
+```
+ % sudo bpftool map update id 412    key  8 0 0 0     8 0 0 0 value  0 0x0 0x0 0xf 
+
+```
+* add src 192.168.0.26/32 in priority_client 
+```
+sudo bpftool map update id 413    key  32 0 0 0    192 168 0 26 value  0 0x0 0x0 0x0
 ```
 
-Verification for lo with maps:
+* expected result 
+packet with src * to 8.8.8.8 has label 14 , packet to other destinations has lbl 1000000
 
- - if ip dst is 8.8.8.8 put label 10782 else put default label
+packet with src * to 8.8.8.8 has label 14 and not 15 , packet to other destinations has lbl 1000000
+
+packet with src 192.168.0.26 to 8.8.8.8 has label 15 , packet to other destinations has lbl 1000000
+
+
+Checkig with lo 
 
 ```
  % sudo tcpdump -i lo mpls -n 
@@ -66,7 +77,10 @@ listening on lo, link-type EN10MB (Ethernet), capture size 262144 bytes
 
 
     
-Verification:
+Future updates with JNP LAB:
+
+![LnetD-HOST](/images/lnetd-host-ctl.png)
+
 ```
 R5:
 lab@gb-pe5-lon> show configuration protocols source-packet-routing                  
