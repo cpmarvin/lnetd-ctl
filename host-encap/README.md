@@ -8,7 +8,7 @@ https://github.com/Netronome/bpf-samples/blob/master/l4lb
 https://github.com/fzakaria/ebpf-mpls-encap-decap
 
 
-See pdf for more details.
+See https://github.com/cpmarvin/lnetd-ctl/blob/main/host-encap/ebpf_mpls_encap.pdf for more details.
 
 1000000 is the first available static label on JNP but you can use any label #define MPLS_STATIC_LABEL <X>.
     
@@ -40,14 +40,14 @@ all done , filename lnetd-host-mpls-encap.o active on interface lo
 
 - Program map
 
-* add dst 8.0.0.0/8 in default_dst with labelt 14 0xe
+* add dst 8.0.0.0/8 in default_dst with labelt 100 0x64
 ```
- % sudo bpftool map update id 413    key  8 0 0 0     8 0 0 0 value  0 0x0 0x0 0xe 
+ % sudo bpftool map update id 413    key  8 0 0 0     8 0 0 0 value  0 0x0 0x0 0x64 
 
 ```
-* add dst 8.0.0.0/8 in priority_dst with labelt 15 0xf
+* add dst 8.0.0.0/8 in priority_dst with labelt 200 0xC8
 ```
- % sudo bpftool map update id 412    key  8 0 0 0     8 0 0 0 value  0 0x0 0x0 0xf 
+ % sudo bpftool map update id 412    key  8 0 0 0     8 0 0 0 value  0 0x0 0x0 0xC8
 
 ```
 * add src 192.168.0.26/32 in priority_client 
@@ -57,11 +57,11 @@ sudo bpftool map update id 413    key  32 0 0 0    192 168 0 26 value  0 0x0 0x0
 
 * expected result 
 
-packet with src * to 8.8.8.8 has label 14 , packet to other destinations has lbl 1000000
+packet with src * to 8.8.8.8 has label 100 , packet to other destinations has lbl 1000000
 
-packet with src * to 8.8.8.8 has label 14 and not 15 , packet to other destinations has lbl 1000000
+packet with src * to 8.8.8.8 has label 100 and not 200 , packet to other destinations has lbl 1000000
 
-packet with src 192.168.0.26 to 8.8.8.8 has label 15 , packet to other destinations has lbl 1000000
+packet with src 192.168.0.26 to 8.8.8.8 has label 200 , packet to other destinations has lbl 1000000
 
 
 Checkig with lo 
