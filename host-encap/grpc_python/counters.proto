@@ -27,7 +27,7 @@ message MappaketReply{
 message MapInfo{
      int32  id = 1;
      string name  = 2;
-     int32  entries = 3; 
+     repeated MapEntry entries = 3; 
 }
 
 // packet for UpdateMap request , map_id , subnet as x.x.x.x/24 , lbl as int
@@ -39,4 +39,10 @@ message UpdateMapRequest{
 // packet for UpdateMap reply , string for now with confirmation if it was programmed or not
 message UpdateMapReply{
      string message = 1;
+}
+
+message MapEntry{
+  int32 subnet = 1;
+  string ipaddress = 2;
+  int32 lbl = 3 ;
 }

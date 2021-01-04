@@ -4,6 +4,10 @@ import struct
 import sys
 
 
+def hex_list_to_int(hex_list):
+    hex_str = ''.join([byte.replace('0x', '') for byte in hex_list])
+    return (int.from_bytes(bytes.fromhex(hex_str), byteorder='little'))
+
 def check_output_json(cmd):
     return json.loads(subprocess.check_output(cmd, shell=True).decode("utf-8"))
 
@@ -52,6 +56,7 @@ def get_map_names(interface):
                 entry["id"] = m["id"]
                 entry["name"] = m["name"]
                 entry["entries"] = get_map_entries_count(m["id"])
+                #entry["entries"] = [{'subnet':24,'ipaddress':19216811,'lbl':10}]
                 map_ids.append(entry)
         return map_ids
     except Exception as e:
@@ -63,9 +68,20 @@ def get_map_entries_count(map_id):
     try:
         cmd_progshow = "bpftool map dump id %d -j" % map_id
         total_entries = check_output_json(cmd_progshow)
-        return len(total_entries)
+        entries = []
+        for n in total_entries:
+            mask_hex = n['key'][0:4]
+            mask_dec = [int(x, 16) for x in mask_hex][0]
+            dest_ip = [int(byte.replace('0x',''), 16) for byte in n['key'][4:8]]
+            ip = '%s.%s.%s.%s' % (dest_ip[0], dest_ip[1], dest_ip[2], dest_ip[3])
+            lbl_hex = n['value'][0:4]
+            lbl_hex_full = ''.join(x.replace('0x','') for x in lbl_hex)
+            lbl = int(lbl_hex_full,16)
+            full_entry  = {'subnet':mask_dec,'ipaddress':ip,'lbl':lbl}
+            entries.append(full_entry)
+        return entries
     except Exception as e:
-        return str(e)
+        return []
 
 def update_map(map_id,subnet,lbl):
     ip = subnet.split('/')[0].split('.')

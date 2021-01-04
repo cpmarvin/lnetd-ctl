@@ -19,6 +19,9 @@ group1.add_argument('-p', action='store_true', required=False,
 group2.add_argument('-a', action='store_true', required=False,
                     help='Add entry to map')
 
+group2.add_argument('-r', action='store_true', required=False,
+                    help='Remove entry from map')
+
 group2.add_argument('-m', action='store', required=False, type=int,
                     help='map id')
 
