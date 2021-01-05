@@ -84,6 +84,11 @@ class int_UpdateMapStub(object):
                 request_serializer=counters__pb2.UpdateMapRequest.SerializeToString,
                 response_deserializer=counters__pb2.UpdateMapReply.FromString,
                 )
+        self.DeleteMap = channel.unary_unary(
+                '/counters.int_UpdateMap/DeleteMap',
+                request_serializer=counters__pb2.UpdateMapRequest.SerializeToString,
+                response_deserializer=counters__pb2.UpdateMapReply.FromString,
+                )
 
 
 class int_UpdateMapServicer(object):
@@ -96,11 +101,22 @@ class int_UpdateMapServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def DeleteMap(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_int_UpdateMapServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'UpdateMap': grpc.unary_unary_rpc_method_handler(
                     servicer.UpdateMap,
+                    request_deserializer=counters__pb2.UpdateMapRequest.FromString,
+                    response_serializer=counters__pb2.UpdateMapReply.SerializeToString,
+            ),
+            'DeleteMap': grpc.unary_unary_rpc_method_handler(
+                    servicer.DeleteMap,
                     request_deserializer=counters__pb2.UpdateMapRequest.FromString,
                     response_serializer=counters__pb2.UpdateMapReply.SerializeToString,
             ),
@@ -127,6 +143,23 @@ class int_UpdateMap(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/counters.int_UpdateMap/UpdateMap',
+            counters__pb2.UpdateMapRequest.SerializeToString,
+            counters__pb2.UpdateMapReply.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def DeleteMap(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/counters.int_UpdateMap/DeleteMap',
             counters__pb2.UpdateMapRequest.SerializeToString,
             counters__pb2.UpdateMapReply.FromString,
             options, channel_credentials,

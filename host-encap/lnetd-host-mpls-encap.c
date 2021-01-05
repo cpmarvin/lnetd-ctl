@@ -98,7 +98,7 @@ struct bpf_map_def SEC("maps") priority_clients = {
 	.type = BPF_MAP_TYPE_LPM_TRIE,
 	.key_size = sizeof(struct bpf_lpm_trie_key) + sizeof(__u32),
 	.value_size = sizeof(__u32),
-	.max_entries = 50,
+	.max_entries = 1000000,
 	.map_flags = BPF_F_NO_PREALLOC,
 };
 
@@ -106,7 +106,7 @@ struct bpf_map_def SEC("maps") priority_dst = {
 	.type = BPF_MAP_TYPE_LPM_TRIE,
 	.key_size = sizeof(struct bpf_lpm_trie_key) + sizeof(__u32),
 	.value_size = sizeof(__u32),
-	.max_entries = 50,
+	.max_entries = 1000000,
 	.map_flags = BPF_F_NO_PREALLOC,
 };
 
@@ -114,7 +114,7 @@ struct bpf_map_def SEC("maps") default_dst = {
 	.type = BPF_MAP_TYPE_LPM_TRIE,
 	.key_size = sizeof(struct bpf_lpm_trie_key) + sizeof(__u32),
 	.value_size = sizeof(__u32),
-	.max_entries = 50,
+	.max_entries = 1000000,
 	.map_flags = BPF_F_NO_PREALLOC,
 };
 
@@ -332,6 +332,7 @@ static __always_inline int process_packet(struct xdp_md *ctx, __u64 off)
 	//write the header
 	*mpls = mpls_new;
 
+        // https://prototype-kernel.readthedocs.io/en/latest/networking/XDP/implementation/xdp_actions.html
 	return XDP_TX;
 }
 

@@ -83,19 +83,26 @@ def get_map_entries_count(map_id):
     except Exception as e:
         return []
 
-def update_map(map_id,subnet,lbl):
+def update_map(map_id,subnet,lbl,action='add'):
     ip = subnet.split('/')[0].split('.')
     subnet = subnet.split('/')[1]
     ip_hex = '0x{:02X} 0x{:02X} 0x{:02X} 0x{:02X}'.format( int(ip[0]),int(ip[1]),int(ip[2]),int(ip[3]) )
     ip_hex =  ''.join([ip for ip in ip_hex])
     mask_hex = '0x{:02x} 0x0 0x0 0x0'.format( int(subnet))
     lbl_hex = '%08X' % lbl
-    BPF_RUN = ([' sudo bpftool map update id ', str(map_id), ' key ', mask_hex ,ip_hex, ' value ' ,'0x'+lbl_hex[0:2] , '0x'+lbl_hex[2:4] ,'0x'+lbl_hex[4:6
-] ,'0x'+lbl_hex[6:8] ])
+    if action == 'add':
+        BPF_RUN = ([' sudo bpftool map update id ',
+			str(map_id), ' key ',
+			mask_hex ,ip_hex,
+			' value ' ,'0x'+lbl_hex[0:2] ,
+			'0x'+lbl_hex[2:4] ,'0x'+lbl_hex[4:6] ,'0x'+lbl_hex[6:8] ])
+    elif action =='delete':
+        BPF_RUN = ([' sudo bpftool map delete id ',
+			str(map_id), ' key ',
+			mask_hex ,ip_hex])
     BPF_RUN = ' '.join(BPF_RUN)
     try:
         result = subprocess.check_output(BPF_RUN, shell=True)
         return 'OK' + BPF_RUN
-    except:
-        return 'NOK'
-
+    except Exception as e:
+        return 'NOK: '+ str(e)

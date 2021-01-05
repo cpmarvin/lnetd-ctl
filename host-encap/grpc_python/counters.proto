@@ -11,6 +11,7 @@ service int_map{
 // RPC to update map 
 service int_UpdateMap{
     rpc UpdateMap(UpdateMapRequest) returns (UpdateMapReply) {};
+    rpc DeleteMap(UpdateMapRequest) returns (UpdateMapReply) {}
 }
 
 

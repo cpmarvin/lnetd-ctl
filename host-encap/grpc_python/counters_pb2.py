@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   syntax='proto3',
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n\x0e\x63ounters.proto\x12\x08\x63ounters\"%\n\x10MappacketRequest\x12\x11\n\tinterface\x18\x01 \x01(\t\"4\n\rMappaketReply\x12#\n\x08map_info\x18\x01 \x03(\x0b\x32\x11.counters.MapInfo\"H\n\x07MapInfo\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0c\n\x04name\x18\x02 \x01(\t\x12#\n\x07\x65ntries\x18\x03 \x03(\x0b\x32\x12.counters.MapEntry\"?\n\x10UpdateMapRequest\x12\x0e\n\x06map_id\x18\x01 \x01(\x05\x12\x0e\n\x06subnet\x18\x02 \x01(\t\x12\x0b\n\x03lbl\x18\x03 \x01(\x05\"!\n\x0eUpdateMapReply\x12\x0f\n\x07message\x18\x01 \x01(\t\":\n\x08MapEntry\x12\x0e\n\x06subnet\x18\x01 \x01(\x05\x12\x11\n\tipaddress\x18\x02 \x01(\t\x12\x0b\n\x03lbl\x18\x03 \x01(\x05\x32K\n\x07int_map\x12@\n\x07GetMaps\x12\x1a.counters.MappacketRequest\x1a\x17.counters.MappaketReply\"\x00\x32T\n\rint_UpdateMap\x12\x43\n\tUpdateMap\x12\x1a.counters.UpdateMapRequest\x1a\x18.counters.UpdateMapReply\"\x00\x62\x06proto3'
+  serialized_pb=b'\n\x0e\x63ounters.proto\x12\x08\x63ounters\"%\n\x10MappacketRequest\x12\x11\n\tinterface\x18\x01 \x01(\t\"4\n\rMappaketReply\x12#\n\x08map_info\x18\x01 \x03(\x0b\x32\x11.counters.MapInfo\"H\n\x07MapInfo\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0c\n\x04name\x18\x02 \x01(\t\x12#\n\x07\x65ntries\x18\x03 \x03(\x0b\x32\x12.counters.MapEntry\"?\n\x10UpdateMapRequest\x12\x0e\n\x06map_id\x18\x01 \x01(\x05\x12\x0e\n\x06subnet\x18\x02 \x01(\t\x12\x0b\n\x03lbl\x18\x03 \x01(\x05\"!\n\x0eUpdateMapReply\x12\x0f\n\x07message\x18\x01 \x01(\t\":\n\x08MapEntry\x12\x0e\n\x06subnet\x18\x01 \x01(\x05\x12\x11\n\tipaddress\x18\x02 \x01(\t\x12\x0b\n\x03lbl\x18\x03 \x01(\x05\x32K\n\x07int_map\x12@\n\x07GetMaps\x12\x1a.counters.MappacketRequest\x1a\x17.counters.MappaketReply\"\x00\x32\x99\x01\n\rint_UpdateMap\x12\x43\n\tUpdateMap\x12\x1a.counters.UpdateMapRequest\x1a\x18.counters.UpdateMapReply\"\x00\x12\x43\n\tDeleteMap\x12\x1a.counters.UpdateMapRequest\x1a\x18.counters.UpdateMapReply\"\x00\x62\x06proto3'
 )
 
 
@@ -345,13 +345,23 @@ _INT_UPDATEMAP = _descriptor.ServiceDescriptor(
   index=1,
   serialized_options=None,
   create_key=_descriptor._internal_create_key,
-  serialized_start=432,
-  serialized_end=516,
+  serialized_start=433,
+  serialized_end=586,
   methods=[
   _descriptor.MethodDescriptor(
     name='UpdateMap',
     full_name='counters.int_UpdateMap.UpdateMap',
     index=0,
+    containing_service=None,
+    input_type=_UPDATEMAPREQUEST,
+    output_type=_UPDATEMAPREPLY,
+    serialized_options=None,
+    create_key=_descriptor._internal_create_key,
+  ),
+  _descriptor.MethodDescriptor(
+    name='DeleteMap',
+    full_name='counters.int_UpdateMap.DeleteMap',
+    index=1,
     containing_service=None,
     input_type=_UPDATEMAPREQUEST,
     output_type=_UPDATEMAPREPLY,

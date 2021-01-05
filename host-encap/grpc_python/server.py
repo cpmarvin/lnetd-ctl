@@ -13,7 +13,13 @@ class int_UpdateMap(counters_pb2_grpc.int_UpdateMapServicer):
         map_id = request.map_id
         subnet = request.subnet
         lbl = request.lbl
-        result = update_map(map_id,subnet,lbl)
+        result = update_map(map_id,subnet,lbl,action='add')
+        return counters_pb2.UpdateMapReply(message=result)
+    def DeleteMap(self, request, context):
+        map_id = request.map_id
+        subnet = request.subnet
+        lbl = request.lbl
+        result = update_map(map_id,subnet,lbl,action='delete')
         return counters_pb2.UpdateMapReply(message=result)
 
 

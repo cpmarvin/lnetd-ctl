@@ -36,19 +36,29 @@ args = parser.parse_args()
 channel = grpc.insecure_channel("127.0.0.1:50051")
 
 import sys
+print(args)
 
-if args.i and args.p == False:
-   parser.error('--name and --password must be given together')
-   sys.exit()
-elif args.i and args.p == True:
-   xdp_interface = args.i
-   stub1 = counters_pb2_grpc.int_mapStub(channel)
-   response1 = stub1.GetMaps(counters_pb2.MappacketRequest(interface=xdp_interface))
-   print(response1)
-elif args.m and args.a == False:
-   parser.error('--name and --password must be given together')
-   sys.exit()
-elif args.m and args.a == True:
-    stub2 = counters_pb2_grpc.int_UpdateMapStub(channel)
-    response2  = stub2.UpdateMap(counters_pb2.UpdateMapRequest(map_id=args.m,subnet=args.s,lbl=args.l))
-    print(response2)
+if args.a :
+    if (not args.m or not args.s or not args.l ):
+        print('-a -s and -l must be given together when using remove')
+    else:
+        stub2 = counters_pb2_grpc.int_UpdateMapStub(channel)
+        response2  = stub2.UpdateMap(counters_pb2.UpdateMapRequest(map_id=args.m,subnet=args.s,lbl=args.l))
+        print(response2)
+
+if args.r :
+    if (not args.m or not args.s ):
+        print('-m and -s must be given together when using remove')
+    else:
+        stub3 = counters_pb2_grpc.int_UpdateMapStub(channel)
+        response3  = stub3.DeleteMap(counters_pb2.UpdateMapRequest(map_id=args.m,subnet=args.s,lbl=100))
+        print(response3)
+
+if args.i :
+    if args.p == False:
+        parser.error('-i and --p must be given together')
+    elif args.p == True:
+        xdp_interface = args.i
+        stub1 = counters_pb2_grpc.int_mapStub(channel)
+        response1 = stub1.GetMaps(counters_pb2.MappacketRequest(interface=xdp_interface))
+        print(response1)
