@@ -1,31 +1,39 @@
-# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
+LIBBPFSRC = libbpf/src
 
-LLVM_VERSION ?=
-LLVM := $(shell clang$(LLVM_VERSION) --version)
-CLANG_FLAGS ?= -W -Wall \
-	-Wno-compare-distinct-pointer-types
+LIBBPFOBJS += $(LIBBPFSRC)/staticobjs/bpf_prog_linfo.o $(LIBBPFSRC)/staticobjs/bpf.o $(LIBBPFSRC)/staticobjs/btf_dump.o
+LIBBPFOBJS += $(LIBBPFSRC)/staticobjs/btf.o $(LIBBPFSRC)/staticobjs/hashmap.o $(LIBBPFSRC)/staticobjs/libbpf_errno.o
+LIBBPFOBJS += $(LIBBPFSRC)/staticobjs/libbpf_probes.o $(LIBBPFSRC)/staticobjs/libbpf.o $(LIBBPFSRC)/staticobjs/netlink.o
+LIBBPFOBJS += $(LIBBPFSRC)/staticobjs/nlattr.o $(LIBBPFSRC)/staticobjs/str_error.o
+LIBBPFOBJS += $(LIBBPFSRC)/staticobjs/xsk.o
 
-SRCS=$(wildcard *.c)
-OBJS=$(patsubst %.c,%.o,$(SRCS))
-Q ?= @
+LOADEROBJS += src/cmdline.o
+LOADERSRC += src/lnetd_cmd.c
+LOADERFLAGS += -lelf -lz -lconfig
 
-INCLUDE_DIRS ?= -Iheaders/
+ADDOBJS += src/cmdline.o
+ADDSRC +=  src/lnetd_util.c
 
-%.o: %.c
-	@echo "\tLLVM CC $@"
-	$(Q) clang$(LLVM_VERSION) $(INCLUDE_DIRS) -O2 -emit-llvm -c $< $(CLANG_FLAGS) -o $(patsubst %.o,%.llvm,$@)
-	$(Q) llc$(LLVM_VERSION) -march=bpf -filetype=obj -o $@ $(patsubst %.o,%.llvm,$@)
-	$(Q) rm $(patsubst %.o,%.llvm,$@)
 
-ifeq ($(LLVM),)
-all:
-	$(warning Install LLVM to compile BPF sources)
-else
-all: $(OBJS)
-endif
+UTILSOBJ += src/utils.o
+UTILSSRC += src/utils.c
 
+#all: utils xdp_prog loader xdp_util
+all: utils xdp_prog loader
+loader: libbpf utils $(LOADEROBJS)
+	clang -I$(LIBBPFSRC) $(LOADERFLAGS) -O3 -o lnetd_cmd $(LIBBPFOBJS) $(LOADEROBJS) $(UTILSOBJ)  $(LOADERSRC)
+xdp_util: libbpf utils $(ADDOBJS)
+	clang -I$(LIBBPFSRC) $(LOADERFLAGS) -O3 -o lnetd_util $(LIBBPFOBJS) $(ADDOBJS) $(UTILSOBJ) $(ADDSRC)
+xdp_prog:
+	clang -I$(LIBBPFSRC) -D__BPF__ -Wall -Wextra -O2 -emit-llvm -c src/lnetd_host_mpls_encap.c -o src/lnetd_host_mpls_encap.bc
+	llc -march=bpf -filetype=obj src/lnetd_host_mpls_encap.bc -o lnetd_host_xdp_prog.o
+libbpf:
+	$(MAKE) -C $(LIBBPFSRC)
+utils: libbpf $(LOADEROBJS)
+	clang -I$(LIBBPFSRC) -Wno-unused-command-line-argument $(LOADERFLAGS) -c -o $(UTILSOBJ) $(LIBBPFOBJS) $(LOADEROBJS) $(UTILSSRC)
 clean:
-	rm -f *.llvm
-	rm -f *.o
-
-.PHONY: all clean
+	$(MAKE) -C $(LIBBPFSRC) clean
+	rm -f src/*.o src/*.bc *.o
+	rm -f lnetd_cmd lnetd_util
+install:
+.PHONY: libbpf all
+.DEFAULT: all

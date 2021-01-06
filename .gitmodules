@@ -1,0 +1,3 @@
+[submodule "host-encap/libbpf"]
+	path = host-encap/libbpf
+	url = https://github.com/libbpf/libbpf

@@ -14,7 +14,7 @@
 #include <linux/udp.h>
 #include "bpf_endian.h"
 #include "bpf_helpers.h"
-#include "jhash.h"
+//#include "jhash.h"
 
 #define MAX_SERVERS 512
 /* 0x3FFF mask to check for fragment offset field */
@@ -118,12 +118,6 @@ struct bpf_map_def SEC("maps") default_dst = {
 	.map_flags = BPF_F_NO_PREALLOC,
 };
 
-struct bpf_map_def SEC("maps") servers1 = {
-	.type = BPF_MAP_TYPE_HASH,
-	.key_size = sizeof(__u32), //ipv4_address
-	.value_size = sizeof(struct dest_info),
-	.max_entries = MAX_SERVERS,
-};
 
 /* not used , but in the future
 static __always_inline struct dest_info *hash_get_dest(struct pkt_meta *pkt)
@@ -241,7 +235,7 @@ static __always_inline int process_packet(struct xdp_md *ctx, __u64 off)
 	__u8 protocol;
 	__u8 ttl;
 
-	u32 mpls_lbl = MPLS_STATIC_LABEL;
+	__u32 mpls_lbl = MPLS_STATIC_LABEL;
 
 	original_header = data;
 	iph = data + off;

@@ -13,17 +13,22 @@ See https://github.com/cpmarvin/lnetd-ctl/blob/main/host-encap/ebpf_mpls_encap.p
 
 1000000 is the first available static label on JNP but you can use any label #define MPLS_STATIC_LABEL <X>.
     
-To compile the program just make inside the folder.
+Compile the program and cmd with:
+
+```
+git clone https://github.com/cpmarvin/lnetd-ctl.git
+git submodule update --init --recursive
+make
+```
  
 Using the lnetd_cmd:
 
 ```
 - Disable with lnetd_cmd
  % sudo ./lnetd_cmd -i <int_name> -r
-stopping
+
 - Enable with lnetd_cmd 
  % sudo ./lnetd_cmd -i <int_name>   
-all done , filename lnetd-host-mpls-encap.o active on interface lo
 ```
 
 - Check program id and get map id 
