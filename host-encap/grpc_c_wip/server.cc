@@ -1,7 +1,4 @@
 #include <string>
-
-
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -12,8 +9,9 @@
 #include <signal.h>
 #include <unistd.h>
 
-#include <linux/bpf.h>
-//#include <libbpf.h>
+#include <bpf.h>
+#include <libbpf.h>
+
 #include <linux/if_link.h>
 #include <net/if.h>
 #include <arpa/inet.h>
@@ -23,7 +21,9 @@
 #include <grpcpp/grpcpp.h>
 #include "mathtest.grpc.pb.h"
 
-#define DST_MAP "/sys/fs/bpf/lnetd-host/default_dst"
+extern "C" {
+  #include "utils.h" //a C header, so wrap it in extern "C" 
+}
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -34,6 +34,7 @@ using mathtest::MathTest;
 using mathtest::MathRequest;
 using mathtest::MathReply;
 
+
 class MathServiceImplementation final : public MathTest::Service {
     Status sendRequest(
         ServerContext* context, 
@@ -42,28 +43,18 @@ class MathServiceImplementation final : public MathTest::Service {
     ) override {
         int a = request->a();
         int b = request->b();
+        int c = foo(100);
 
-        reply->set_result(a * b);
+        reply-> set_result(c);
+        //reply-> foo();
 
         return Status::OK;
     } 
 };
 
-int bpf_map_get(const char *path)
-{
-    int fd = -1;
 
-    fd = bpf_obj_get(path);
 
-    return fd;
-}
 
-void ebpf_update(){
-
-int fwdmap = bpf_map_get(DST_MAP);
-bpf_map_update_elem(fwdmap, &fwdkey, &fwdinfo, BPF_ANY)
-
-}
 void Run() {
     std::string address("0.0.0.0:5000");
     MathServiceImplementation service;

@@ -1,0 +1,11 @@
+clang++ mathtest.pb.o mathtest.grpc.pb.o utils.o server.o \
+#../libbpf/src/staticobjs/xsk.o \
+#../libbpf/src/staticobjs/hashmap.o ../libbpf/src/staticobjs/libbpf_errno.o \
+#../libbpf/src/staticobjs/libbpf_probes.o \
+#../libbpf/src/staticobjs/netlink.o \
+#../libbpf/src/staticobjs/nlattr.o ../libbpf/src/staticobjs/str_error.o ../libbpf/src/staticobjs/xsk.o -L/usr/local/lib \
+-L/usr/local/lib `pkg-config \
+--libs protobuf grpc++` -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed -ldl -o server \
+../libbpf/src/staticobjs/xsk.o 
+
+

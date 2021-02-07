@@ -1,10 +1,10 @@
 LDFLAGS = -L/usr/local/lib `pkg-config --libs protobuf grpc++`\
            -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed\
-           -ldl
+           -ldl -lbcc
 
 CXX = g++
 CPPFLAGS += `pkg-config --cflags protobuf grpc`
-CXXFLAGS += -std=c++11
+CXXFLAGS += -std=c++11 -I../libbpf/src/
 
 CXX=clang++
 #CXXFLAGS= -stdlib=c++11
@@ -14,12 +14,12 @@ LDXX="clang++ -stdlib=libc++"
 GRPC_CPP_PLUGIN = grpc_cpp_plugin
 GRPC_CPP_PLUGIN_PATH ?= `which $(GRPC_CPP_PLUGIN)`
 
-all: server
+all: server client
 
-client: mathtest.pb.o mathtest.grpc.pb.o client.o
+client: mathtest.pb.o mathtest.grpc.pb.o utils.o client.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
-server: mathtest.pb.o mathtest.grpc.pb.o server.o
+server: mathtest.pb.o mathtest.grpc.pb.o utils.o server.o
 	$(CXX) $^ $(LDFLAGS) -o $@
 
 %.grpc.pb.cc: %.proto

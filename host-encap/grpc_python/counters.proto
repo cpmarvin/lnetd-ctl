@@ -7,6 +7,7 @@ package counters;
 // RPC to get map id and name on interface
 service int_map{
     rpc GetMaps(MappacketRequest) returns (MappaketReply) {};
+    rpc GetMapCounters(MappacketRequest) returns (countersReply) {};
 }
 // RPC to update map 
 service int_UpdateMap{
@@ -46,4 +47,18 @@ message MapEntry{
   int32 subnet = 1;
   string ipaddress = 2;
   int32 lbl = 3 ;
+}
+
+//reply counters for each entry
+message countersReply{
+    repeated Counters entries = 1;
+}
+
+//counters content
+message Counters {
+    string src = 1;
+    string dst = 2;
+    int32 lbl = 3;
+    int64 pkts = 4;
+    int64 bytes = 5;
 }

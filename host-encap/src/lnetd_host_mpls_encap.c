@@ -86,6 +86,19 @@ struct pkt_meta
 	};
 };
 
+struct src_dst_lbl
+{
+	__be32 src;
+	__be32 dst;
+	__u32 lbl;
+};
+
+struct pkt_counters
+{
+	__u64 pkts;
+	__u64 bytes;
+};
+
 struct dest_info
 {
 
@@ -118,6 +131,31 @@ struct bpf_map_def SEC("maps") default_dst = {
 	.map_flags = BPF_F_NO_PREALLOC,
 };
 
+//keep counters per ip src_dst_lbl
+struct bpf_map_def SEC("maps") counters = {
+	.type = BPF_MAP_TYPE_HASH,
+	.key_size = sizeof(struct src_dst_lbl),
+	.value_size = sizeof(struct pkt_counters),
+	.max_entries = 1000000,
+};
+
+static __always_inline struct pkt_counters *find_or_update_map(struct src_dst_lbl c_key)
+{
+	struct pkt_counters *c_value;
+	/* create an temp empty struct to be used in key creation */
+	struct pkt_counters c_value_null;
+	c_value_null.bytes = 0;
+	c_value_null.pkts = 0;
+
+	c_value = bpf_map_lookup_elem(&counters, &c_key);
+
+	if (!c_value)
+	{
+		bpf_map_update_elem(&counters, &c_key, &c_value_null, BPF_NOEXIST);
+	}
+	c_value = bpf_map_lookup_elem(&counters, &c_key);
+	return c_value;
+}
 
 /* not used , but in the future
 static __always_inline struct dest_info *hash_get_dest(struct pkt_meta *pkt)
@@ -292,10 +330,6 @@ static __always_inline int process_packet(struct xdp_md *ctx, __u64 off)
 		{
 			//get the label from the map for this destination
 			mpls_lbl = bpf_ntohl(trie_dst_result->lbl);
-			//update stats for later
-			//pkt_size = (__u16)(data_end - data);
-			//__sync_fetch_and_add(&tnl->pkts, 1);
-			//__sync_fetch_and_add(&tnl->bytes, pkt_size);
 		}
 		else
 		{
@@ -321,13 +355,35 @@ static __always_inline int process_packet(struct xdp_md *ctx, __u64 off)
 
 	//create mpls header
 	struct mpls_hdr mpls_new = mpls_encode(mpls_lbl, ttl, 0, 1);
+
 	//allocate the correct space in the packet
 	mpls = data + sizeof(*new_eth);
 	//write the header
 	*mpls = mpls_new;
 
-        // https://prototype-kernel.readthedocs.io/en/latest/networking/XDP/implementation/xdp_actions.html
+	//counters
+
+	struct src_dst_lbl c_key;
+	struct pkt_counters *c_value;
+
+	c_key.dst = pkt.dst;
+	c_key.src = pkt.src;
+	c_key.lbl = bpf_ntohl(mpls_lbl);
+
+	c_value = find_or_update_map(c_key);
+
+	if (!c_value)
+	{
+		return XDP_DROP;
+	}
+
+	pkt_size = (__u16)(data_end - data);
+	__sync_fetch_and_add(&c_value->pkts, 1);
+	__sync_fetch_and_add(&c_value->bytes, pkt_size);
+
+	// https://prototype-kernel.readthedocs.io/en/latest/networking/XDP/implementation/xdp_actions.html
 	return XDP_TX;
+	//return XDP_PASS;
 }
 
 SEC("xdp")
